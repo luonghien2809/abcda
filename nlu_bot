@@ -1,0 +1,135 @@
+## intent:greet
+- hi there
+- hello there
+- hey
+- hi
+- hey bot
+- good morning
+- goodmorning
+- hello
+- goodevening
+- goodafternoon
+- good evening
+- morning
+- good afternoon
+
+## intent:goodbye
+- bye
+- thank you
+- thank bot
+- nice
+- great ! Thank bot
+- it's great !
+
+## intent:what_object
+- what is the [image size](entity) ?
+- what is the [image layer](entity) ?
+- what is the [image background](entity) ?
+- what is the [color](entity) ?
+- what is the [RBG color](entity) ?
+- what is the [gray color](entity) ?
+- what is the [gussan layer](entity) ?
+- what is the [background color](entity) ?
+- what is the [zoom tool](entity) ?
+- what is the [hand tool](entity) ?
+- what is the [move tool](entity) ?
+- what is the [lasso tool](entity) ?
+- what is the [magnetic laso tool](entity) ?
+- what is the [rectangular merquee tool](entity) ?
+- what is the [quick selection tool](entity) ?
+- what is the [selection brush tool](entity) ?
+- what is the [magic wand tool](entity) ?
+- what is the [refine selection brush tool](entity) ?
+- what is the [auto selection tool](entity) ?
+- what is the [eye tool](entity) ?
+- what is the [spot healing brush tool](entity) ?
+- what is the [smart brush tool](entity) ?
+- what is the [detail smart brush tool](entity) ?
+- what is the [clone stamp tool](entity) ?
+- what is the [pattern stamp tool](entity) ?
+- what is the [background](entity) ?
+- what is the [blur tool](entity) ?
+- what is the [sharpen tool](entity) ?
+- what is the [smudge tool](entity) ?
+- what is the [sponge tool](entity) ?
+- what is the [burn tool](entity) ?
+- what is the [brush tool](entity) ?
+- what is the [impressionist brush tool](entity) ?
+- what is the [color replacement tool](entity) ?
+- what is the [eraser tool](entity) ?
+- what is the [background eraser tool](entity) ?
+- what is the [magic eraser tool](entity) ?
+- what is the [paint bucket tool](entity) ?
+- what is the [pattern tool](entity) ?
+- what is the [gradient tool](entity) ?
+- what is the [color picker tool](entity) ?
+- what is the [custom shape tool](entity) ?
+- what is the [type tool](entity) ?
+- what is the [pencil tool](entity) ?
+- what is the [crop tool](entity) ?
+- what is the [cookie cutter tool](entity) ?
+- what is the [perspective crop tool](entity) ?
+- what is the [recompose tool](entity) ?
+- what is the [content-aware move tool](entity) ?
+- what is the [straighten tool](entity) ?
+
+## intent:what_compare
+- what is the different between [backgroud image](entity) and [background color](entity) ?
+- different between [blur tool](entity) and [gussan tool](entity)
+- different between [crop tool](entity) and [eraser tool](entity)
+- different between [brush tool](entity) and [magic wand tool](entity)
+- different between [image layer](entity) and [background layer](entity)
+- different between [blur tool](entity) and [gussan tool](entity)
+- what is the different between [backgroud image](entity) and [background color](entity) ?
+- what is the different between [photoshop cs6](entity) and [photoshop cs5](entity) ?
+- what is the different between [photoshop cs6](entity) and [photoshop CC](entity) ?
+- what is the different between [photoshop cs5](entity) and [photoshop CC](entity) ?
+- different between [photoshop cs6](entity) and [photoshop cs5](entity)
+- different between [photoshop cs6](entity) and [photoshop CC](entity)
+- different between [photoshop cs5](entity) and [photoshop CC](entity)
+- what is the different of [selection brush tool](entity) and [magic tool](entity) ?
+- different between [selection brush tool](entity) and [magic tool](entity)
+- different between [lasso tool](entity) and [magic tool](entity)
+- different between [megnetic lasso tool](entity) and [magic tool](entity)
+- different between [auto selection tool](entity) and [magic tool](entity)
+- different between [quick selection tool](entity) and [magic tool](entity)
+- what is the different of [lasso tool](entity) and [magic tool](entity) ?
+- what is the different of [megnetic lasso tool](entity) and [magic tool](entity) ?
+- what is the different of [auto selection tool](entity) and [magic tool](entity) ?
+- what is the different of [quick selection tool](entity) and [magic tool](entity) ?
+
+
+## intent:what_compare_using
+- what is the different between [changing](action) [image background](entity) and [changing](action) [background color](entity) ?
+- different between [changing](action) [image background](entity) and [changing](action) [background color](entity).
+- different between [croping](action) [image](entity) and [erasing](action) [image](entity)
+- different between [using](action) [lasso tool](entity) and [using](action) [selection brush tool](entity)
+
+## intent:thankyou
+- um thank you good bye
+- okay cool uh good bye thank you
+- okay thank you good bye
+- you rock
+- and thats all thank you and good bye
+- thank you and good bye
+- sorry about my mistakes thank you good bye
+- noise thank you good bye
+- thank you goodbye noise
+- okay thank you goodbye
+- uh thank you good bye
+- thank you goodbye
+- thank you goodbye noise thank you goodbye
+- breath thank you goodbye
+- thank you
+- okay thank you
+- thanks goodbye
+- ah thank you goodbye
+- thank you noise
+- thank you good bye
+- breath thank you very much goodbye
+- thanks
+- noise thank you goodbye
+- unintelligible thank you goodbye
+- uh okay thank you good bye
+- thank you bye
+- um okay thank you good bye

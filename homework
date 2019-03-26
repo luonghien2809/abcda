@@ -71,9 +71,9 @@ def process(array):
     Output = {}
     for x, y in array: 
         if y in Output: 
-            Output[y].append((x, y)) 
+            Output[y].append([x, y]) 
         else: 
-            Output[y] = [(x, y)] 
+            Output[y] = [[x, y]] 
     
     for i in Output:
         temp = []

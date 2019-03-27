@@ -1,0 +1,112 @@
+template_width = 69
+template_height = 65
+def getStr2Int(_string):
+    string = ''
+    count = 0
+    for i in _string:
+        if i != ',' and count < 2:
+            string = string + i
+        elif i == ',' and count == 0:
+            string = string + ','
+            count = count + 1
+        else: count = count + 1
+    string = string.split(',')
+    return list(map(int,string))
+
+def cleanData(loc_1, loc_2): # sửa lại thành template height và width
+    if abs(loc_1[0] - loc_2[0]) < template_height-1 and abs(loc_1[1] - loc_2[1]) < template_width-1:
+        return True # SAI
+    return False
+
+def processPressedImage(array):
+    res = []
+    temp = []
+    for i in range (len(array)):
+        #for j in range(len(array)):
+        if i == len(array)-1:
+            if len(temp) > 0:
+                temp.insert(0, array[i])
+                y_new = 0
+                x_new = 0
+                for index in temp:
+                    y_new = y_new + index[0]
+                    x_new = x_new + index[1]
+                y_new = int(y_new/len(temp))   
+                x_new = int(x_new/len(temp))
+                a = [y_new, x_new]
+                res.append(a)
+                temp.clear()
+            else:
+                res.append(array[i])
+        else:
+            if  cleanData(array[i],array[i+1]) :
+                temp.append(array[i])
+                #print(len(temp))
+            else: 
+                if len(temp) > 0:
+                    temp.insert(0, array[i])
+                    y_new = 0
+                    x_new = 0
+                    for index in temp:
+                        y_new = y_new + index[0]
+                        x_new = x_new + index[1]
+                    y_new = int(y_new/len(temp))   
+                    x_new = int(x_new/len(temp))
+                    a = [y_new, x_new]
+                    res.append(a)
+                    temp.clear()
+                else:
+                    res.append(array[i])
+        
+    return res
+
+
+def preProcess(filename):
+    loc_array = []
+    string = ''
+    with open(filename, "r") as f:
+        string = f.readlines()
+        file.close()
+
+    for item in string:
+        loc_array.append(getStr2Int(item))
+
+    loc_array = sorted(loc_array)
+    #print(loc_array)
+    return process(processPressedImage(loc_array))
+
+def write2File(filename, array):
+    with open(filename, "w") as f:
+        for item in array:
+            string = str(item[0])+','+ str(item[1])+',' + str(template_width) +',' + str(template_height) +'\n'
+            f.write(string)
+        f.close()
+        return True
+    return False
+
+def process(array):
+    res = []
+    Output = {}
+    for x, y in array: 
+        if y in Output: 
+            Output[y].append([x, y]) 
+        else: 
+            Output[y] = [[x, y]] 
+    
+    for i in Output:
+        temp = []
+        #print(Output[i][0])
+        if len(Output[i]) == 1:
+            res.append(Output[i][0])
+        else:
+            temp = processPressedImage(Output[i])
+            for item in temp:
+                res.append(item)
+    res = sorted(res)    
+    return res
+
+if __name__ == '__main__':
+    write2File("location.txt", preProcess("location.txt"))
+    write2File("location.txt", preProcess("location.txt"))
+    k = preProcess("location.txt")
+    print(k)

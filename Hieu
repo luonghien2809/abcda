@@ -1,0 +1,646 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[4]:
+import time
+import sys
+import threading
+import tensorflow as tf
+from filelock import FileLock as lck
+import shutil
+#default our libary to generate errpr data.
+from Lib.image import ImageDataGenerator, array_to_img, img_to_array, load_img
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Activation, Dropout, Flatten, Dense
+from keras.models import load_model
+from keras import regularizers
+from keras import backend as K
+import keras
+import numpy as np 
+import cv2
+from matplotlib import pyplot as plt
+import imutils
+import glob
+import os
+import argparse
+#Data train with 4000 pictures: 2000 train - 3000 validation
+#Data test with 800 pictures: 200 train - 600 validation
+
+K.clear_session()
+lck = threading.Lock()
+
+parser = argparse.ArgumentParser(description="Enter your URL template image: ")
+parser.add_argument('--mainUrl', dest='main_url') # Directory của layout.png
+parser.add_argument('--templateFolder', dest='template_folder') # folder chứa tất cả hình mẫu.
+parser.add_argument('--models', dest='models') # folder chứa các model khi train xong.
+parser.add_argument('--txt', dest='filename') # 
+args = parser.parse_args()
+#Lấy các biến tham số từ args để tiện cho việc gọi.
+main_Image = args.main_url
+main_img = cv2.imread(main_Image,0) 
+main_width, main_height = main_img.shape[::-1] # lấy chiều dài chiều rộng của Layout.
+fileLocation = args.filename
+#with open(fileLocation, 'w') as f:
+#        f.write('1\n') 
+#        f.close()
+img_path = args.template_folder
+#im = cv2.imread(img_path,0) #get height and width of template image.
+#template_width, template_height = im.shape[::-1]
+model_dir = args.models
+
+arr = []
+with open('/home/fujinet/Documents/PatternRecognition/file_path_predict.txt') as file:
+    line = file.readline()
+    line = line[:-1]
+    arr.append(line)
+    while line:
+            #print("Line {}: {}".format(cnt, line.strip()))
+        line = file.readline()
+        if line not in ['\n', '\r\n', '']:
+            arr.append(line.strip())
+   
+
+#Generate normal true data.
+def GenerateDataTrain(img_path):
+    datagen = ImageDataGenerator(
+        featurewise_center=True,
+        rescale=1./255,
+        fill_mode = 'nearest')
+
+    img = load_img(img_path)
+    x = img_to_array(img)
+    x = x.reshape((1,) + x.shape)
+    i = 0
+    for batch in datagen.flow(x, batch_size = 1,
+                            save_to_dir =arr[2], save_prefix='Data', save_format='jpeg'):
+        i+= 1
+        if i == 5001:
+            break
+    
+    j = 0
+    path, dirs, files = next(os.walk(arr[2]))
+    file_count = len(files)
+    if(file_count < 5000):
+        for batch in datagen.flow(x, batch_size = 1,
+                               save_to_dir = arr[2], save_prefix='Data_A', save_format='jpeg'):
+            j+= 1
+            if(j == 5000 - file_count):
+                break
+            
+#Generate mist normal true data.
+def GenerateDataTrainMist(img_path):
+    datagen = ImageDataGenerator(
+        width_shift_range=0.3,
+        rescale=1./255,
+        featurewise_center=True,
+        height_shift_range=0.3,
+        fill_mode= 'constant', cval = 255)
+
+    img = load_img(img_path)
+    x = img_to_array(img)
+    x = x.reshape((1,) + x.shape)
+    i = 0
+    for batch in datagen.flow(x, batch_size = 1,
+                            save_to_dir = arr[3], save_prefix='Mist', save_format='jpeg'):
+        i+= 1
+        if i == 1001:
+            break
+
+    j = 0
+    path, dirs, files = next(os.walk(arr[3]))
+    file_count = len(files)
+    if(file_count < 1000):
+        for batch in datagen.flow(x, batch_size = 1,
+                               save_to_dir = arr[3], save_prefix='Mist_A', save_format='jpeg'):
+            j+= 1
+            if(j == 1000 - file_count):
+                break
+            
+#Generate mist data with X wrong.
+def GenerateDataMist_X(img_path):
+    datagen = ImageDataGenerator(
+        width_shift_range=0.4,
+        rescale=1./255,
+        featurewise_center=True,
+        horizontal_flip= True,
+        fill_mode = 'reflect')
+
+    img = load_img(img_path)
+    x = img_to_array(img)
+    x = x.reshape((1,) + x.shape)
+    i = 0
+    for batch in datagen.flow(x, batch_size = 1,
+                            save_to_dir = arr[3], save_prefix='Mist_X', save_format='jpeg'):
+        i+= 1
+        if i == 2001:
+            break
+    
+    j = 0
+    path, dirs, files = next(os.walk(arr[3]))
+    file_count = len(files)
+    if(file_count < 3000):
+        for batch in datagen.flow(x, batch_size = 1,
+                               save_to_dir = arr[3], save_prefix='Mist_X_A', save_format='jpeg'):
+            j+= 1
+            if(j == 3000 - file_count):
+                break
+        
+#Generate mist data with Y wrong.            
+def GenerateDataMist_Y(img_path):
+    datagen = ImageDataGenerator(
+        height_shift_range=0.4,
+        rescale=1./255,
+        featurewise_center=True,
+        vertical_flip=True,
+        fill_mode= 'constant', cval = 255)
+
+    img = load_img(img_path)
+    x = img_to_array(img)
+    x = x.reshape((1,) + x.shape)
+    i = 0
+    for batch in datagen.flow(x, batch_size = 1,
+                            save_to_dir = arr[3], save_prefix='Mist_Y', save_format='jpeg'):
+        i+= 1
+        if i == 2001:
+            break
+        
+    j = 0
+    path, dirs, files = next(os.walk(arr[3]))
+    file_count = len(files)
+    if(file_count < 5000):
+        for batch in datagen.flow(x, batch_size = 1,
+                               save_to_dir = arr[3], save_prefix='Mist_Y_A', save_format='jpeg'):
+            j+= 1
+            if(j == 5000 - file_count):
+                break
+                
+#Generate true validation data to service fit model
+def GenerateDataTest(img_path):
+    datagen = ImageDataGenerator(
+        featurewise_center=True,
+        rescale=1./255,
+        fill_mode = 'nearest')
+
+    img = load_img(img_path)
+    x = img_to_array(img)
+    x = x.reshape((1,) + x.shape)
+
+    i = 0
+    for batch in datagen.flow(x, batch_size = 1,
+                            save_to_dir = arr[4], save_prefix='Data', save_format='jpeg'):
+        i+= 1
+        if i == 401:
+            break
+            
+    j = 0
+    path, dirs, files = next(os.walk(arr[4]))
+    file_count = len(files)
+    if(file_count < 400):
+        for batch in datagen.flow(x, batch_size = 1,
+                               save_to_dir =arr[4], save_prefix='Data_A', save_format='jpeg'):
+            j+= 1
+            if(j == 400 - file_count):
+                break
+
+def GenerateDataTestMist(img_path):
+    datagen = ImageDataGenerator(
+        width_shift_range=0.3,
+        rescale=1./255,
+        featurewise_center=True,
+        height_shift_range=0.3,
+        fill_mode= 'constant', cval = 255)
+
+    img = load_img(img_path)
+    x = img_to_array(img)
+    x = x.reshape((1,) + x.shape)
+    
+    i = 0
+    for batch in datagen.flow(x, batch_size = 1,
+                            save_to_dir = arr[5], save_prefix='Mist', save_format='jpeg'):
+        i+= 1
+        if i == 401:
+            break
+            
+    j = 0
+    path, dirs, files = next(os.walk(arr[5]))
+    file_count = len(files)
+    if(file_count < 400):
+        for batch in datagen.flow(x, batch_size = 1,
+                               save_to_dir = arr[5], save_prefix='Mist_A', save_format='jpeg'):
+            j+= 1
+            if(j == 400 - file_count):
+                break
+                
+#Generate validation mist X data to service fit model            
+def GenerateDataTest_X(img_path):
+    datagen = ImageDataGenerator(
+        width_shift_range=0.4,
+        rescale=1./255,
+        featurewise_center=True,
+        horizontal_flip= True,
+        fill_mode = 'reflect')
+
+    img = load_img(img_path)
+    x = img_to_array(img)
+    x = x.reshape((1,) + x.shape)
+    i = 0
+    for batch in datagen.flow(x, batch_size = 1,
+                            save_to_dir = arr[5], save_prefix='Mist_X', save_format='jpeg'):
+        i+= 1
+        if i == 601:
+            break
+            
+    j = 0
+    path, dirs, files = next(os.walk(arr[5]))
+    file_count = len(files)
+    if(file_count < 1000):
+        for batch in datagen.flow(x, batch_size = 1,
+                               save_to_dir = arr[5], save_prefix='Mist_X_A', save_format='jpeg'):
+            j+= 1
+            if(j == 1000 - file_count):
+                break
+            
+#Generate validation mist Y data to service fit model             
+def GenerateDataTest_Y(img_path):
+    datagen = ImageDataGenerator(
+        height_shift_range=0.4,
+        rescale=1./255,
+        vertical_flip=True,
+        featurewise_center=True,
+        fill_mode= 'constant', cval = 255)
+
+    img = load_img(img_path)
+    x = img_to_array(img)
+    x = x.reshape((1,) + x.shape)
+    
+    i = 0
+    for batch in datagen.flow(x, batch_size = 1,
+                            save_to_dir = arr[5], save_prefix='Mist_Y', save_format='jpeg'):
+        i+= 1
+        if i == 601:
+            break
+        
+    j = 0
+    path, dirs, files = next(os.walk(arr[5]))
+    file_count = len(files)
+    if(file_count < 1600):
+        for batch in datagen.flow(x, batch_size = 1,
+                               save_to_dir = arr[5], save_prefix='Mist_Y_A', save_format='jpeg'):
+            j+= 1
+            if(j == 1600 - file_count):
+                break
+            
+            
+            
+            
+def ComplieModel():
+    if K.image_data_format() == 'channels_first':
+        input_shape = (3, template_height, template_width)
+    else:
+        input_shape = (template_height, template_width, 3)
+    
+    model = Sequential()
+    model.add(Conv2D(32, (3, 3), input_shape=input_shape))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    #model.add(Dropout(0.3))
+
+    model.add(Conv2D(32, (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    #model.add(Dropout(0.3))
+
+    model.add(Conv2D(64, (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    #model.add(Dropout(0.2))
+
+    model.add(Flatten())
+    model.add(Dense(64))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(1))
+    model.add(Activation('sigmoid'))
+
+    adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-8)
+    model.compile(loss='binary_crossentropy',optimizer=adam,metrics=['binary_accuracy'])
+    
+    return model
+
+def TrainModel(train_data_dir, validation_data_dir, model, model_directory, template_width, template_height):
+    #Default
+	# giả sử models = model1;model2;model3
+    nb_train_samples = 7000
+    nb_validation_samples = 2000
+    epochs = 30
+    batch_size = 20
+    #template = cv2.imread(img_path,0)
+    #w,h = template.shape[::-1]
+    train_datagen = ImageDataGenerator(rescale=1. / 255)
+    test_datagen = ImageDataGenerator(rescale= 1./ 255)
+
+    train_generator = train_datagen.flow_from_directory(
+        train_data_dir,
+        target_size=(template_height, template_width),
+        batch_size = batch_size,
+        class_mode = 'binary')
+
+    validation_generator = test_datagen.flow_from_directory(
+        validation_data_dir,
+        target_size=(template_height, template_width),
+        batch_size=batch_size,
+        class_mode= 'binary')
+
+    model.fit_generator(
+        train_generator,
+        steps_per_epoch=nb_train_samples // batch_size,
+        epochs=epochs,
+        validation_data=validation_generator,
+        validation_steps=nb_validation_samples // batch_size)
+    model.save(model_directory)
+    #print(model.history)
+    return 1
+    
+# return location of pixels when predict finished    
+class MultiThread(threading.Thread):
+    def __init__(self, name, model, template_width, template_hight, main_Image, start_X, start_Y, end_X, end_Y, delay):
+        threading.Thread.__init__(self)
+        self._stop_event = threading.Event()
+        self.name = name
+        self.model = model
+        self.template_width = template_width
+        self.template_height = template_height
+        self.main_Image = main_Image
+        self.start_X = start_X
+        self.start_Y = start_Y
+        self.end_X = end_X
+        self.end_Y = end_Y
+        self.delay = delay
+        self.session = K.get_session()
+        self.graph = tf.get_default_graph()
+        #self.graph.finalize() # finalize
+    
+    def run(self):
+        #print("Starting " + self.name)
+        try: 
+            prediction(self.name, self.main_Image, self.model, self.start_X, self.start_Y, self.end_X, self.end_Y,
+						self.session, self.graph, fileLocation, self.template_width, self.template_height)
+        except Exception:
+            raise Exception()
+    
+    def stop(self):
+        self._stop_event.set() 
+        
+    def stopped(self):
+        return self._stop_event.is_set()
+
+def prediction(name, main_image_path, model, start_X, start_Y, end_X, end_Y, 
+                        session, graph, location_txt_path, template_width, template_height):
+    im = cv2.imread(main_image_path)
+    j = start_Y
+    #template_width = 46
+    #template_hight = 46
+    i = start_X
+    while i < end_X:
+        x = im[j : j + template_height , i : i + template_width]
+        #x = im[i : i + template_width , j : j + template_height]		
+        if(x.shape != (template_height, template_width, 3)):
+            break
+        x = x.reshape((1,) + x.shape)
+        with session.as_default():
+            with graph.as_default():
+                res = model.predict(x)
+        if res == 0:
+            #print(name)
+            #print(j + template_height, i + template_width) # tọa độ (y,x)
+            located = str(j) + ',' + str(i) + ',' + str(template_height) + ',' + str(template_width) +'\n'
+            write_to_file(location_txt_path,located)
+        i = i + 1
+    
+#def write_to_file(filename, content, condition):
+#    global lck
+#    lck.acquire()
+#    with open(filename, 'a') as f:
+#        f.write(content)
+#        f.close()
+#    lck.release()
+    
+def write_to_file(filename, content):
+    global lck
+    lck.acquire()
+    
+    with open(filename, 'a') as f:
+        f.write(content)
+        f.close()
+    lck.release()
+# hàm xóa hết hình trong folder train + test
+def delete_generate_file(path):
+    for filename in os.listdir(path):
+            filepath = os.path.join(path, filename)
+            try:
+                shutil.rmtree(filepath)
+            except OSError:
+                os.remove(filepath)
+
+def detection(train_folder,validation_folder, model_directory, template_width, template_height):
+    if(TrainModel(train_folder, validation_folder, ComplieModel(), model_directory, template_width, template_height) == 1):
+        delete_generate_file(arr[2]) # sửa direction này lại sau này.
+        delete_generate_file(arr[3]) # sửa direction này lại sau này.
+        delete_generate_file(arr[4]) # sửa direction này lại sau này.
+        delete_generate_file(arr[5]) # sửa direction này lại sau này.
+        print('Training model is finished.')
+        print('Prediction is processing ! Please wait a few minutes.')
+        print('Loading model is ', model_directory)
+        model = load_model(model_directory)
+        #error = 0
+        try:
+            y = 0
+            while y < (main_height - 5 - template_height):
+                #model_path = _model_dir + '/' + name # Load tên của model trong folder chứa nó.
+                thread1 = MultiThread("thread 1", model, template_width, template_height, main_Image,0,y,main_width,main_height,1)
+                thread2 = MultiThread("thread 2", model, template_width, template_height, main_Image,0,y+1,main_width,main_height,2)
+                thread3 = MultiThread("thread 3", model, template_width, template_height, main_Image,0,y+2,main_width,main_height,3)
+                thread4 = MultiThread("thread 4", model, template_width, template_height, main_Image,0,y+3,main_width,main_height,4)
+                thread5 = MultiThread("thread 5", model, template_width, template_height, main_Image,0,y+4,main_width,main_height,5)
+                
+                thread1.start()
+                thread2.start()
+                thread3.start()
+                thread4.start()
+                thread5.start()
+                
+                thread1.join()
+                thread2.join()
+                thread3.join()
+                thread4.join()
+                thread5.join()
+
+
+                #thread1.stop()
+                #thread2.stop()
+                #thread3.stop()
+                #thread4.stop()
+                #thread5.stop()
+
+                y = y + 5
+            
+            K.clear_session()
+             
+            return True
+                            
+        except:
+            print ("Error")
+            #write_to_file(fileLocation,2,2)
+            #error = 1
+        #K.clear_session()        
+        #return True
+    return False
+
+def moveFile(source, destination):
+    for image in glob.iglob(os.path.join(source, "*.jpeg"))    :
+        shutil.move(image, destination)  
+
+def getStr2Int(_string):
+    string = ''
+    count = 0
+    for i in _string:
+        if i != ',' and count < 2:
+            string = string + i
+        elif i == ',' and count == 0:
+            string = string + ','
+            count = count + 1
+        else: count = count + 1
+    string = string.split(',')
+    return list(map(int,string))
+
+def cleanData(loc_1, loc_2): # sửa lại thành template height và width
+    if abs(loc_1[0] - loc_2[0]) < template_height-1 and abs(loc_1[1] - loc_2[1]) < template_width-1:
+        return True # SAI
+    return False
+
+def processPressedImage(array):
+    res = []
+    temp = []
+    for i in range (len(array)):
+        #for j in range(len(array)):
+        if i == len(array)-1:
+            if len(temp) > 0:
+                temp.insert(0, array[i])
+                y_new = 0
+                x_new = 0
+                for index in temp:
+                    y_new = y_new + index[0]
+                    x_new = x_new + index[1]
+                y_new = int(y_new/len(temp))   
+                x_new = int(x_new/len(temp))
+                a = [y_new, x_new]
+                res.append(a)
+                temp.clear()
+            else:
+                res.append(array[i])
+        else:
+            if  cleanData(array[i],array[i+1]) :
+                temp.append(array[i])
+                #print(len(temp))
+            else: 
+                if len(temp) > 0:
+                    temp.insert(0, array[i])
+                    y_new = 0
+                    x_new = 0
+                    for index in temp:
+                        y_new = y_new + index[0]
+                        x_new = x_new + index[1]
+                    y_new = int(y_new/len(temp))   
+                    x_new = int(x_new/len(temp))
+                    a = [y_new, x_new]
+                    res.append(a)
+                    temp.clear()
+                else:
+                    res.append(array[i])
+        
+    return res
+
+
+def preProcess(filename):
+    loc_array = []
+    string = ''
+    with open(filename, "r") as f:
+        string = f.readlines()
+        file.close()
+
+    for item in string:
+        loc_array.append(getStr2Int(item))
+
+    loc_array = sorted(loc_array)
+    #print(loc_array)
+    return process(processPressedImage(loc_array))
+
+def write2File(filename, array):
+    with open(filename, "w") as f:
+        for item in array:
+            string = str(item[0])+','+ str(item[1])+',' + str(template_height) +',' + str(template_width) +'\n'
+            f.write(string)
+        f.close()
+        return True
+    return False
+
+def process(array):
+    res = []
+    Output = {}
+    for x, y in array: 
+        if y in Output: 
+            Output[y].append([x, y]) 
+        else: 
+            Output[y] = [[x, y]] 
+    
+    for i in Output:
+        temp = []
+        #print(Output[i][0])
+        if len(Output[i]) == 1:
+            res.append(Output[i][0])
+        else:
+            temp = processPressedImage(Output[i])
+            for item in temp:
+                res.append(item)
+    res = sorted(res)    
+    return res
+
+
+				
+if __name__ == '__main__':
+    #print(img_path)
+    #array = os.listdir(img_path)
+    i = 0
+    for filename in os.listdir(img_path):
+        im_path = img_path +'/'+ filename
+        model_directory = model_dir + '/model' + str(i) + '.h5' 
+        img = cv2.imread(os.path.join(img_path,filename),0) #get height and width of template image.
+        template_width, template_height = img.shape[::-1]
+        #Generation
+        GenerateDataTrain(im_path)
+        GenerateDataTrainMist(im_path)
+        GenerateDataMist_X(im_path)
+        GenerateDataMist_Y(im_path)
+
+        GenerateDataTest(im_path)
+        GenerateDataTestMist(im_path)
+        GenerateDataTest_X(im_path)
+        GenerateDataTest_Y(im_path)
+        
+        print('Generation data is finished.')
+        if detection(arr[0],arr[1], model_directory, template_width, template_height):
+            key = 1
+        i = i + 1
+    #write_to_file(fileLocation,3)
+    #time.sleep(120)
+    if key == 1:
+        if write2File('location_Up.txt',preProcess(fileLocation)):
+            if write2File('location_Up.txt',preProcess(fileLocation)):
+                print('Done')
+    #print(preProcess(fileLocation))
+    sys.exit()
+
+    
+    
+    
+    
